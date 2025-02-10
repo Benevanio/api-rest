@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Estoque - Jogos</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+    <h1>Controle de Estoque de Jogos</h1>
+    
+    <div class="container">
+        <h2>Jogos em Estoque</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Ano</th>
+                    <th>Preço</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="games"></tbody>
+        </table>
+
+        <h2>Adicionar Novo Jogo</h2>
+        <form id="add-game-form">
+            <label for="title">Título:</label>
+            <input type="text" id="title" name="title" required>
+            
+            <label for="year">Ano:</label>
+            <input type="number" id="year" name="year" required>
+            
+            <label for="price">Preço:</label>
+            <input type="number" id="price" name="price" required>
+            
+            <button type="submit">Adicionar</button>
+        </form>
+
+        <h2>Deletar Jogo</h2>
+        <form id="delete-game-form">
+            <label for="id">ID do jogo:</label>
+            <input type="text" id="delete-id" name="id" required>
+            <button type="submit">Deletar</button>
+        </form>
+
+        <h2>Atualizar Jogo</h2>
+        <form id="update-game-form">
+            <label for="id">ID:</label>
+            <input type="text" id="update-id" name="id" required>
+
+            <label for="title">Título:</label>
+            <input type="text" id="update-title" name="title" required>
+
+            <label for="year">Ano:</label>
+            <input type="number" id="update-year" name="year" required>
+
+            <label for="price">Preço:</label>
+            <input type="number" id="update-price" name="price" required>
+
+            <button type="submit">Atualizar</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function loadGames() {
+            axios.get('http://localhost:3000/games')
+                .then(response => {
+                    const games = response.data;
+                    const gamesTable = document.getElementById('games');
+                    gamesTable.innerHTML = ''; // Limpa a tabela antes de renderizar
+                    games.forEach(game => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${game._id}</td>  <!-- Use _id -->
+                            <td>${game.title}</td>
+                            <td>${game.year}</td>
+                            <td>R$ ${game.price}</td>
+                            <td><button onclick="deleteGame('${game._id}')">🗑</button></td>  <!-- Use _id -->
+                        `;
+                        gamesTable.appendChild(row);
+                    });
+                })
+                .catch(error => console.error(error));
+        }
+
+        // Função para adicionar um jogo
+        document.getElementById('add-game-form').addEventListener('submit', event => {
+            event.preventDefault();
+            const title = document.getElementById('title').value;
+            const year = parseInt(document.getElementById('year').value);
+            const price = parseFloat(document.getElementById('price').value);
+
+            axios.post('http://localhost:3000/game', { title, year, price })
+                .then(() => {
+                    loadGames();  // Atualiza a lista de jogos
+                    document.getElementById('add-game-form').reset();  // Limpa o formulário
+                })
+                .catch(error => console.error(error));
+        });
+
+        // Função para deletar um jogo
+        function deleteGame(id) {
+            axios.delete(`http://localhost:3000/game/${id}`)
+                .then(() => loadGames())  // Atualiza a lista de jogos após a exclusão
+                .catch(error => console.error(error));
+        }
+
+        // Função para deletar um jogo com base no ID fornecido no formulário
+        document.getElementById('delete-game-form').addEventListener('submit', event => {
+            event.preventDefault();
+            const id = document.getElementById('delete-id').value;
+            deleteGame(id);
+        });
+
+        // Função para atualizar um jogo
+        document.getElementById('update-game-form').addEventListener('submit', event => {
+            event.preventDefault();
+            const id = document.getElementById('update-id').value;
+            const title = document.getElementById('update-title').value;
+            const year = parseInt(document.getElementById('update-year').value);
+            const price = parseFloat(document.getElementById('update-price').value);
+
+            axios.put(`http://localhost:3000/game/${id}`, { title, year, price })
+                .then(() => {
+                    loadGames();  // Atualiza a lista de jogos
+                    document.getElementById('update-game-form').reset();  // Limpa o formulário
+                })
+                .catch(error => console.error(error));
+        });
+
+        // Carrega os jogos ao carregar a página
+        loadGames();
+    </script>
+
+</body>
+</html>
